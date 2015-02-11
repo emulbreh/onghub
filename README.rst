@@ -1,4 +1,4 @@
 onghub
 ======
 
-*on* *g* it *hub*
+onghub runs code when you push to GitHub.
