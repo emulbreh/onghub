@@ -1,4 +1,5 @@
 import logging
+import json
 
 from werkzeug.routing import Map, Rule
 from werkzeug.exceptions import MethodNotAllowed, HTTPException
@@ -34,9 +35,14 @@ class Endpoint(object):
 class Webhook(Endpoint):
     def post(self, request, signed_repo_slug):
         repo_slug = self.app.unsign(signed_repo_slug)
-        project = self.app.get_project(repo_slug)
-        project.trigger()
+        event = request.headers.get('X-GitHub-Event')
+        payload = json.loads(request.get_data())
+        slug = payload['repository']['full_name']
+        if slug != repo_slug:
+            raise Forbidden("repo name does not match: %r != %r" % (repo_slug, slug))
         logger.info('%s', project)
+        project = self.app.get_project(repo_slug)
+        project.trigger(event)
         return Response("")
 
 

@@ -1,5 +1,6 @@
+import os
 import re
-import subprocess
+import shutil
 import gevent
 
 from onghub.jobs import Job
@@ -14,6 +15,7 @@ class Project(object):
             raise ValueError('invalid repo slug: %r' % repo_slug)
         self.app = app
         self.repo_slug = repo_slug
+        self.path = os.path.join(self.app.job_dir, repo_slug)
     
     @property
     def key(self):
@@ -23,11 +25,13 @@ class Project(object):
     def hook_url(self):
         return self.app.build_url('/hooks/%s' % self.key)
 
-    def trigger(self):
-        job = Job(self.app, self)
+    def trigger(self, event=None):
+        job = Job(self.app, self, event)
         job.start()
     
     @property
     def git_url(self):
         return 'git@github.com:%s.git' % self.repo_slug
     
+    def delete(self):
+        shutil.rmtree(self.path)
